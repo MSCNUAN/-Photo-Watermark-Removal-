@@ -1,0 +1,7 @@
+{
+  "name": "智能图像处理大师 (AI Image Master)",
+  "description": "一个创新的智能图像处理平台，提供原图去水印和基于AI重绘的两种高级去水印方案。结合Gemini 2.5强大的图像处理能力，让您的图片焕然一新。",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}

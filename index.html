@@ -1,0 +1,385 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>暖暖の去水印小站 - 开启 AI 魔法</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkBg: '#0f172a',
+                        darkPanel: 'rgba(30, 41, 59, 0.7)',
+                    }
+                }
+            }
+        }
+    </script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=ZCOOL+KuaiLe&family=Noto+Sans+SC:wght@400;700&display=swap');
+        
+        body {
+            font-family: 'Noto+Sans+SC', sans-serif;
+            margin: 0;
+            overflow-x: hidden;
+            background: #ffe4e6;
+            transition: background-color 0.3s ease;
+        }
+
+        .dark body {
+            background: #0f172a;
+        }
+
+        .anime-title {
+            font-family: 'ZCOOL KuaiLe', cursive;
+        }
+
+        .bg-anime {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background-image: url('https://api.vvhan.com/api/wallpaper/acg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            z-index: -2;
+            pointer-events: none;
+        }
+
+        @media (max-width: 768px) {
+            .bg-anime {
+                background-attachment: scroll; 
+            }
+        }
+
+        .dark .bg-anime {
+            filter: brightness(0.4) saturate(1.2);
+        }
+
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(8px);
+            z-index: -1;
+            transition: background 0.3s ease;
+        }
+
+        .dark .bg-overlay {
+            background: rgba(15, 23, 42, 0.6);
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .dark .glass-panel {
+            background: rgba(30, 41, 59, 0.75);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
+        }
+
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(219, 39, 119, 0.3);
+            border-radius: 10px;
+        }
+
+        #nn-modal-content {
+            box-shadow: 0 30px 60px -12px rgba(0,0,0,0.3);
+        }
+        .dark #nn-modal-content {
+            background: #1e293b !important;
+            border-color: #334155 !important;
+        }
+        
+        .modal-section-title {
+            position: relative;
+            padding-left: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+        }
+        .modal-section-title::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 80%;
+            background: linear-gradient(to bottom, #ff8fa3, #ff4d6d);
+            border-radius: 2px;
+        }
+
+        .resource-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .resource-card:hover {
+            transform: translateY(-2px);
+            background: white;
+            box-shadow: 0 10px 15px -3px rgba(255, 143, 163, 0.1);
+        }
+        .dark .resource-card:hover {
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: none;
+        }
+    </style>
+<script type="importmap">
+{
+  "imports": {
+    "react/": "https://esm.sh/react@^19.2.4/",
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.38.0"
+  }
+}
+</script>
+</head>
+<body>
+    <div class="bg-anime"></div>
+    <div class="bg-overlay"></div>
+    
+    <!-- 弹窗容器 -->
+    <div id="nn-modal-overlay" class="fixed inset-0 z-[9999] hidden items-center justify-center p-3 sm:p-6 bg-black/50 backdrop-blur-md">
+        <div id="nn-modal-content" class="animate__animated animate__zoomInDown relative w-full max-w-2xl bg-white rounded-[2.5rem] overflow-hidden border-4 border-white dark:border-slate-700 flex flex-col max-h-[92vh]">
+            
+            <!-- 头部装饰性渐变 -->
+            <div class="relative bg-gradient-to-br from-pink-500 via-pink-400 to-purple-500 p-6 sm:p-8 text-center text-white overflow-hidden shrink-0">
+                <div class="absolute -bottom-6 -right-6 text-9xl opacity-10 rotate-[-15deg] pointer-events-none select-none">🌸</div>
+                <div class="absolute -top-6 -left-6 text-9xl opacity-10 rotate-[25deg] pointer-events-none select-none">✨</div>
+                
+                <h2 class="text-xl sm:text-2xl font-bold anime-title drop-shadow-md mb-1">📢 关注我 & 实用资源推荐</h2>
+                <p class="text-[10px] sm:text-xs font-medium opacity-90 drop-shadow-sm">汇总了我的联系方式以及亲测好用的工具与服务</p>
+                
+                <button id="close-btn" class="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-white/20 hover:bg-white/40 text-white transition-all backdrop-blur-sm group">
+                    <i class="fas fa-times text-lg transition-transform group-hover:rotate-90"></i>
+                </button>
+            </div>
+
+            <!-- 滚动内容区 -->
+            <div class="flex-1 overflow-y-auto p-4 sm:p-8 space-y-8 custom-scrollbar dark:bg-slate-800">
+                
+                <!-- 重要公告 -->
+                <div class="bg-red-50 dark:bg-red-900/20 border-2 border-red-100 dark:border-red-800/50 rounded-3xl p-5">
+                    <div class="flex items-center space-x-3 mb-3">
+                        <div class="w-8 h-8 bg-red-500 rounded-xl flex items-center justify-center text-white text-xs shadow-lg shadow-red-200 dark:shadow-none">
+                            <i class="fas fa-bullhorn"></i>
+                        </div>
+                        <h3 class="text-red-600 dark:text-red-400 font-bold text-sm">重要公告</h3>
+                    </div>
+                    <div class="space-y-2 text-xs sm:text-sm leading-relaxed text-red-800 dark:text-red-300/80 font-medium">
+                        <p class="flex items-start">
+                            <span class="mr-2">✦</span>
+                            <span><b>效果仅供参考，目前仍有许多地方不完善。</b></span>
+                        </p>
+                        <p class="flex items-start">
+                            <span class="mr-2">✦</span>
+                            <span>由于 AI 处理机制，去除水印后的照片会有一定程度的压缩及细节损耗，请知悉。</span>
+                        </p>
+                    </div>
+                </div>
+
+                <!-- ✈️ Telegram -->
+                <div class="space-y-4">
+                    <div class="modal-section-title">
+                        <i class="fab fa-telegram text-pink-500 mr-2 text-lg"></i>
+                        <h3 class="text-gray-800 dark:text-white font-black text-sm uppercase tracking-wider">关注我的 Telegram</h3>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <a href="https://t.me/NUAN114514" target="_blank" class="resource-card group flex items-center p-4 bg-blue-50/50 dark:bg-blue-900/10 rounded-2xl border border-blue-100 dark:border-blue-900/30">
+                            <div class="w-10 h-10 bg-[#24A1DE] text-white rounded-xl flex items-center justify-center text-lg mr-3 shadow-md group-hover:scale-110 transition-transform">
+                                <i class="fas fa-bullhorn"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm font-bold text-gray-800 dark:text-gray-200">频道 (资源/动态)</div>
+                                <div class="text-[10px] text-blue-500 font-bold">👉 点击订阅</div>
+                            </div>
+                        </a>
+                        <a href="https://t.me/MSC4652" target="_blank" class="resource-card group flex items-center p-4 bg-cyan-50/50 dark:bg-cyan-900/10 rounded-2xl border border-cyan-100 dark:border-cyan-900/30">
+                            <div class="w-10 h-10 bg-[#34b7f1] text-white rounded-xl flex items-center justify-center text-lg mr-3 shadow-md group-hover:scale-110 transition-transform">
+                                <i class="fas fa-comments"></i>
+                            </div>
+                            <div class="flex-1">
+                                <div class="text-sm font-bold text-gray-800 dark:text-gray-200">群组 (吹水/交流)</div>
+                                <div class="text-[10px] text-cyan-500 font-bold">💬 点击加入</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 🧰 自用工具 & 资源库 -->
+                <div class="space-y-4">
+                    <div class="modal-section-title">
+                        <i class="fas fa-toolbox text-pink-500 mr-2 text-lg"></i>
+                        <h3 class="text-gray-800 dark:text-white font-black text-sm uppercase tracking-wider">自用工具 & 资源库</h3>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <a href="https://nuannuan-tools.vercel.app/" target="_blank" class="resource-card group flex items-center p-3 bg-gray-50 dark:bg-slate-700/30 rounded-2xl border border-gray-100 dark:border-slate-700">
+                            <div class="w-10 h-10 flex-shrink-0 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center text-xl shadow-sm mr-3">📦</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-bold text-gray-800 dark:text-gray-200">个人资源站 (综合导航)</div>
+                                <div class="text-[10px] text-gray-400 truncate">点此访问</div>
+                            </div>
+                        </a>
+                        <a href="https://mypikpak.com/drive/activity/invited?invitation-code=66396543" target="_blank" class="resource-card group flex items-center p-3 bg-gray-50 dark:bg-slate-700/30 rounded-2xl border border-gray-100 dark:border-slate-700">
+                            <div class="w-10 h-10 flex-shrink-0 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center text-xl shadow-sm mr-3">⚡️</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-bold text-gray-800 dark:text-gray-200">PikPak 磁力下载</div>
+                                <div class="text-[10px] text-gray-400 truncate">点击注册</div>
+                            </div>
+                        </a>
+                        <a href="https://www.123684.com/s/R2hjVv-6Pg13" target="_blank" class="resource-card group flex items-center p-3 bg-gray-50 dark:bg-slate-700/30 rounded-2xl border border-gray-100 dark:border-slate-700">
+                            <div class="w-10 h-10 flex-shrink-0 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center text-xl shadow-sm mr-3">📂</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-bold text-gray-800 dark:text-gray-200">123 网盘资源 (提取码: NUAN)</div>
+                                <div class="text-[10px] text-gray-400 truncate">点击查看</div>
+                            </div>
+                        </a>
+                        <a href="https://www.cpolar.com/?channel=0&invite=6DaX" target="_blank" class="resource-card group flex items-center p-3 bg-gray-50 dark:bg-slate-700/30 rounded-2xl border border-gray-100 dark:border-slate-700">
+                            <div class="w-10 h-10 flex-shrink-0 bg-white dark:bg-slate-800 rounded-xl flex items-center justify-center text-xl shadow-sm mr-3">🔧</div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-bold text-gray-800 dark:text-gray-200">自用内网穿透工具</div>
+                                <div class="text-[10px] text-gray-400 truncate">立即试用</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 🛒 流量 & 账号服务 -->
+                <div class="space-y-4">
+                    <div class="modal-section-title">
+                        <i class="fas fa-shopping-cart text-pink-500 mr-2 text-lg"></i>
+                        <h3 class="text-gray-800 dark:text-white font-black text-sm uppercase tracking-wider">流量 & 账号服务</h3>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <a href="https://www.51haoka.cc/index?k=YktYNmtrWTN2R1k9" target="_blank" class="resource-card group flex items-center p-3 bg-pink-50/30 dark:bg-pink-900/10 rounded-2xl border border-pink-100 dark:border-pink-900/30">
+                            <div class="w-10 h-10 bg-pink-500 text-white rounded-xl flex items-center justify-center text-lg mr-3 flex-shrink-0"><i class="fas fa-sim-card"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-bold text-gray-800 dark:text-gray-200">正规运营商流量卡</div>
+                                <div class="text-[9px] text-pink-500 font-bold">点击下单</div>
+                            </div>
+                        </a>
+                        <a href="https://web3.bitget.com/share/1gWULE?inviteCode=NUAN1145" target="_blank" class="resource-card group flex items-center p-3 bg-teal-50/30 dark:bg-teal-900/10 rounded-2xl border border-teal-100 dark:border-teal-900/30">
+                            <div class="w-10 h-10 bg-teal-500 text-white rounded-xl flex items-center justify-center text-lg mr-3 flex-shrink-0"><i class="fas fa-credit-card"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-bold text-gray-800 dark:text-gray-200">Bitget Wallet (外币卡)</div>
+                                <div class="text-[9px] text-teal-600 font-bold">点击申请</div>
+                            </div>
+                        </a>
+                        <a href="https://www.bmwweb.academy/referral/earn-together/refer2earn-usdc/claim?hl=zh-TC&ref=GRO_28502_RAE9X&utm_source=default" target="_blank" class="resource-card group flex items-center p-3 bg-yellow-50/30 dark:bg-yellow-900/10 rounded-2xl border border-yellow-100 dark:border-yellow-900/30">
+                            <div class="w-10 h-10 bg-yellow-500 text-white rounded-xl flex items-center justify-center text-lg mr-3 flex-shrink-0"><i class="fab fa-bitcoin"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-bold text-gray-800 dark:text-gray-200">币安 (Binance) 交易所</div>
+                                <div class="text-[9px] text-yellow-600 font-bold">注册领新手礼</div>
+                            </div>
+                        </a>
+                        <a href="https://goso002.com/?from=24529" target="_blank" class="resource-card group flex items-center p-3 bg-gray-50 dark:bg-slate-700/30 rounded-2xl border border-gray-100 dark:border-slate-700">
+                            <div class="w-10 h-10 bg-slate-800 text-white rounded-xl flex items-center justify-center text-lg mr-3 flex-shrink-0"><i class="fab fa-apple"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-bold text-gray-800 dark:text-gray-200">Apple ID / 充值卡 / 代理</div>
+                                <div class="text-[9px] text-gray-500 font-bold">购买链接</div>
+                            </div>
+                        </a>
+                        <a href="https://accboyytbnn.acceboy.com/" target="_blank" class="resource-card group flex items-center p-3 bg-indigo-50/30 dark:bg-indigo-900/10 rounded-2xl border border-indigo-100 dark:border-indigo-900/30">
+                            <div class="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center text-lg mr-3 flex-shrink-0"><i class="fas fa-globe"></i></div>
+                            <div class="flex-1 min-w-0">
+                                <div class="text-xs font-bold text-gray-800 dark:text-gray-200">海外账号 / AI / 流媒体</div>
+                                <div class="text-[9px] text-indigo-500 font-bold">购买链接</div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- 🚀 网络加速 -->
+                <div class="space-y-4">
+                    <div class="modal-section-title">
+                        <i class="fas fa-rocket text-pink-500 mr-2 text-lg"></i>
+                        <h3 class="text-gray-800 dark:text-white font-black text-sm uppercase tracking-wider">网络加速</h3>
+                    </div>
+                    <a href="https://t.me/NUAN114514/5" target="_blank" class="resource-card group flex items-center p-4 bg-purple-50/50 dark:bg-purple-900/10 rounded-2xl border border-purple-100 dark:border-purple-900/30">
+                        <div class="w-10 h-10 bg-purple-600 text-white rounded-xl flex items-center justify-center text-lg mr-3 shadow-md group-hover:rotate-12 transition-transform">
+                            <i class="fas fa-plane"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-sm font-bold text-gray-800 dark:text-gray-200">自用机场推荐 (稳定高速)</div>
+                            <div class="text-[10px] text-purple-500 font-bold">🌐 查看详情</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- 页脚 -->
+            <div class="p-5 bg-gray-50/80 dark:bg-slate-900/80 border-t border-gray-100 dark:border-slate-700 text-center shrink-0">
+                <p class="text-[10px] sm:text-xs text-gray-500 dark:text-slate-400 font-medium italic">
+                    <i class="fas fa-exclamation-triangle mr-1.5 text-yellow-500 opacity-80"></i> 提示：部分链接可能失效，请以 TG 频道最新动态为准。
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(function() {
+                const modal = document.getElementById('nn-modal-overlay');
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                }
+            }, 300);
+        });
+
+        function closeNnModal() {
+            const modal = document.getElementById('nn-modal-overlay');
+            const content = document.getElementById('nn-modal-content');
+            if (content) {
+                content.classList.remove('animate__zoomInDown');
+                content.classList.add('animate__zoomOut');
+                content.style.animationDuration = '0.2s';
+            }
+            setTimeout(() => {
+                if (modal) {
+                    modal.classList.remove('flex');
+                    modal.classList.add('hidden');
+                }
+                if (content) {
+                    content.classList.remove('animate__zoomOut');
+                    content.classList.add('animate__zoomInDown');
+                }
+            }, 200);
+        }
+
+        document.getElementById('close-btn').onclick = closeNnModal;
+
+        window.onclick = function(event) {
+            let overlay = document.getElementById('nn-modal-overlay');
+            if (event.target == overlay) {
+                closeNnModal();
+            }
+        }
+    </script>
+
+    <div id="root"></div>
+</body>
+</html>
