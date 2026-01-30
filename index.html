@@ -380,6 +380,14 @@
         }
     </script>
 
-    <div id="root"></div>
+    <div id="root">
+        <!-- 加载占位，防止 React 挂载前完全白屏 -->
+        <div class="fixed inset-0 flex items-center justify-center text-pink-500">
+            <i class="fas fa-circle-notch fa-spin text-4xl"></i>
+        </div>
+    </div>
+    
+    <!-- 显式引入 React 入口脚本 -->
+    <script type="module" src="./index.tsx"></script>
 </body>
 </html>
