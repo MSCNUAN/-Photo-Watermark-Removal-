@@ -1,7 +1,20 @@
 
 import { GoogleGenAI, GenerateContentResponse } from "@google/genai";
 
-const API_KEY = process.env.API_KEY || "";
+// 更加稳健的环境变量获取，彻底避免 ReferenceError
+const getApiKey = () => {
+  try {
+    // 检查 process 及其 env 是否真实存在
+    if (typeof process !== 'undefined' && process.env) {
+      return process.env.API_KEY || "";
+    }
+  } catch (e) {
+    // 捕获任何可能的错误并静默失败
+  }
+  return "";
+};
+
+const API_KEY = getApiKey();
 
 /**
  * Utility to convert file to base64
